@@ -53,14 +53,14 @@ jobs:
         run: |
           Copy-Item -Path "./dist/TZApp/*" -Destination "C:\web\TZApp" -Recurse -Force
 
-      - name: Create IIS site
+      - name: Run PowerShell commands as administrator to create IIS site
         run: |
-          Import-Module WebAdministration
-          New-Website -Name "TZApp" -Port 80 -PhysicalPath "C:\web\TZApp" -ApplicationPool "DefaultAppPool"
-      
+          Start-Process powershell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command \"Import-Module WebAdministration; New-Website -Name 'TZApp' -Port 80 -PhysicalPath 'C:\web\TZApp' -ApplicationPool 'DefaultAppPool'\"" -Verb RunAs -Wait
+
       - name: Start IIS site
         run: |
           Start-Website -Name "TZApp"
+
 
 
 
