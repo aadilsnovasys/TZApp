@@ -55,7 +55,7 @@ jobs:
         # Define paths
         $buildSourcePath = "./dist/TZApp/browser/*"
         $iisDestinationPath = "C:\web\TZApp"
-        $scriptSourcePath = "./scripts/deploy-iis.ps1"
+        $scriptSourcePath = "./.github/workflows/scripts/deploy-iis.ps1"
         $scriptDestinationPath = "C:\web\TZApp\deploy-iis.ps1"
 
         # Copy build files
