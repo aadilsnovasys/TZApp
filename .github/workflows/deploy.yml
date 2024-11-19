@@ -25,9 +25,7 @@ jobs:
           name: dist
           path: dist/
   deploy:
-    runs-on:
-    - self-hosted
-    - windows
+    runs-on: self-hosted
     needs: build
     steps:
     # Step 1: Download production build
@@ -42,35 +40,35 @@ jobs:
       run: |
         Get-ChildItem -Recurse ./dist
 
-    # Step 3: Create directory for TZApp in IIS path
+    # Step 3: Create IIS directory for TZApp
     - name: Create IIS directory for TZApp
       run: |
         if (!(Test-Path -Path "C:\web\TZApp")) {
           New-Item -Path "C:\web\TZApp" -ItemType Directory -Force
         }
 
-    # Step 4: Copy build files and script to IIS directory
-    - name: Copy build files and deployment script
+    # Step 4: Copy build files to IIS directory
+    - name: Copy build files to IIS directory
       run: |
-        # Define paths
-        $buildSourcePath = "./dist/TZApp/browser/*"
-        $iisDestinationPath = "C:\web\TZApp"
-        $scriptSourcePath = "./.github/workflows/scripts/deploy-iis.ps1"
-        $scriptDestinationPath = "C:\web\TZApp\deploy-iis.ps1"
+        Copy-Item -Path "./dist/TZApp/browser/*" -Destination "C:\web\TZApp" -Recurse -Force
 
-        # Copy build files
-        Copy-Item -Path $buildSourcePath -Destination $iisDestinationPath -Recurse -Force
-
-        # Copy the deployment script
-        Copy-Item -Path $scriptSourcePath -Destination $scriptDestinationPath -Force
-
-    # Step 5: Run the PowerShell script as administrator
-    - name: Run PowerShell script as administrator
+    # Step 5: Run PowerShell script directly in YAML
+    - name: Configure IIS site
       run: |
-        # Path to the copied script
-        $scriptPath = "C:\web\TZApp\deploy-iis.ps1"
+        Import-Module WebAdministration
+        $siteName = 'TZApp'
+        $physicalPath = 'C:\web\TZApp'
+        $port = 80
 
-        # Execute the script
-        Start-Process -FilePath "powershell.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File $scriptPath" -Verb RunAs -Wait
+        # Check if the site exists
+        if (!(Get-Website | Where-Object { $_.Name -eq $siteName })) {
+          Write-Host "Creating new IIS site: $siteName"
+          New-Website -Name $siteName -PhysicalPath $physicalPath -Port $port -ApplicationPool 'DefaultAppPool'
+        } else {
+          Write-Host "IIS site $siteName already exists. Updating physical path."
+          Set-ItemProperty "IIS:\Sites\$siteName" -Name physicalPath -Value $physicalPath
+        }
 
-  
+        # Ensure the site is running
+        Start-Website -Name $siteName
+      shell: pwsh
