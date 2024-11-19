@@ -35,45 +35,49 @@ jobs:
     runs-on: [self-hosted, windows]
     needs: build
     steps:
-      - name: Download production build
-        uses: actions/download-artifact@v3
-        with:
-          name: dist
-          path: ./dist
+    - name: Download production build
+      uses: actions/download-artifact@v3
+      with:
+        name: dist
+        path: ./dist
 
-      - name: List contents of downloaded build directory (for debugging)
-        run: |
-          Get-ChildItem -Recurse ./dist
+    - name: List contents of downloaded build directory (for debugging)
+      run: |
+        Get-ChildItem -Recurse ./dist
 
-      - name: Create directory for TZApp in IIS path
-        run: |
+    - name: Create directory for TZApp in IIS path
+      run: |
+        if (!(Test-Path -Path "C:\web\TZApp")) {
           New-Item -Path "C:\web\TZApp" -ItemType Directory -Force
+        }
 
-      - name: Copy build files to IIS directory
-        run: |
-          Copy-Item -Path "./dist/TZApp/browser/*" -Destination "C:\web\TZApp" -Recurse -Force
-          
-      - name: Configure IIS site
-        shell: cmd
-        run: |
-          powershell.exe -NoProfile -Command "
-            Import-Module WebAdministration;
-            $siteName = 'TZApp';
-            $physicalPath = 'C:\web\TZApp';
-            $port = 80;
-    
-            if (!(Get-Website | Where-Object { $_.Name -eq $siteName })) {
-              Write-Host 'Creating new IIS site: $siteName';
-              New-Website -Name $siteName -PhysicalPath $physicalPath -Port $port -ApplicationPool 'DefaultAppPool';
-            } else {
-              Write-Host 'IIS site $siteName already exists. Updating physical path.';
-              Set-ItemProperty \"IIS:\\Sites\\$siteName\" -Name physicalPath -Value $physicalPath;
-            }
-    
-            # Ensure the site is running
-            Start-Website -Name $siteName;
-          "
+    - name: Copy build files to IIS directory
+      run: |
+        Copy-Item -Path "./dist/TZApp/browser/*" -Destination "C:\web\TZApp" -Recurse -Force
 
+    - name: Configure IIS site
+      shell: cmd
+      run: |
+        powershell.exe -NoProfile -Command "
+          Import-Module WebAdministration;
+          $siteName = 'TZApp';
+          $physicalPath = 'C:\web\TZApp';
+          $port = 80;
+        
+          # Check if the site exists
+          if (!(Get-Website | Where-Object { $_.Name -eq $siteName })) {
+            Write-Host 'Creating new IIS site: $siteName';
+            New-Website -Name $siteName -PhysicalPath $physicalPath -Port $port -ApplicationPool 'DefaultAppPool';
+          } else {
+            Write-Host 'IIS site $siteName already exists. Updating physical path.';
+            Set-ItemProperty \"IIS:\\Sites\\$siteName\" -Name physicalPath -Value $physicalPath;
+          }
+        
+          # Ensure the site is running
+          Start-Website -Name $siteName;
+        "
+
+    
 
 
 
