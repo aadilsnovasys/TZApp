@@ -1,84 +1,70 @@
 name: Build and Deploy Angular App
-
-on:
+'on':
   push:
     branches:
       - main
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20.11.1'
-
+          node-version: 20.11.1
       - name: Install dependencies
         run: |
           npm install
-
       - name: Build Angular app
         run: |
           npm run build -- --configuration production
-
       - name: Archive production build
         uses: actions/upload-artifact@v3
         with:
           name: dist
           path: dist/
-
   deploy:
-    runs-on: [self-hosted, windows]
+    runs-on:
+      - self-hosted
+      - windows
     needs: build
     steps:
-    - name: Download production build
-      uses: actions/download-artifact@v3
-      with:
-        name: dist
-        path: ./dist
-
-    - name: List contents of downloaded build directory (for debugging)
-      run: |
-        Get-ChildItem -Recurse ./dist
-
-    - name: Create directory for TZApp in IIS path
-      run: |
-        if (!(Test-Path -Path "C:\web\TZApp")) {
-          New-Item -Path "C:\web\TZApp" -ItemType Directory -Force
-        }
-
-    - name: Copy build files to IIS directory
-      run: |
-        Copy-Item -Path "./dist/TZApp/browser/*" -Destination "C:\web\TZApp" -Recurse -Force
-
-    - name: Configure IIS site
-      shell: cmd
-      run: |
-        powershell.exe -NoProfile -Command "
-          Import-Module WebAdministration;
-          $siteName = 'TZApp';
-          $physicalPath = 'C:\web\TZApp';
-          $port = 80;
-        
-          # Check if the site exists
-          if (!(Get-Website | Where-Object { $_.Name -eq $siteName })) {
-            Write-Host 'Creating new IIS site: $siteName';
-            New-Website -Name $siteName -PhysicalPath $physicalPath -Port $port -ApplicationPool 'DefaultAppPool';
-          } else {
-            Write-Host 'IIS site $siteName already exists. Updating physical path.';
-            Set-ItemProperty \"IIS:\\Sites\\$siteName\" -Name physicalPath -Value $physicalPath;
+      - name: Download production build
+        uses: actions/download-artifact@v3
+        with:
+          name: dist
+          path: ./dist
+      - name: List contents of downloaded build directory (for debugging)
+        run: |
+          Get-ChildItem -Recurse ./dist
+      - name: Create directory for TZApp in IIS path
+        run: |
+          if (!(Test-Path -Path "C:\web\TZApp")) {
+            New-Item -Path "C:\web\TZApp" -ItemType Directory -Force
           }
-        
-          # Ensure the site is running
-          Start-Website -Name $siteName;
-        "
+      - name: Copy build files to IIS directory
+        run: >
+          Copy-Item -Path "./dist/TZApp/browser/*" -Destination "C:\web\TZApp"
+          -Recurse -Force
+      - name: Configure IIS site
+        shell: cmd
+        run: |
+          powershell.exe -NoProfile -Command "
+            Import-Module WebAdministration;
+            $siteName = 'TZApp';
+            $physicalPath = 'C:\web\TZApp';
+            $port = 80;
 
-    
+            # Check if the site exists
+            if (!(Get-Website | Where-Object { $_.Name -eq $siteName })) {
+              Write-Host 'Creating new IIS site: $siteName';
+              New-Website -Name $siteName -PhysicalPath $physicalPath -Port $port -ApplicationPool 'DefaultAppPool';
+            } else {
+              Write-Host 'IIS site $siteName already exists. Updating physical path.';
+              Set-ItemProperty \"IIS:\\Sites\\$siteName\" -Name physicalPath -Value $physicalPath;
+            }
 
-
-
-
+            # Ensure the site is running
+            Start-Website -Name $siteName;
+          "
