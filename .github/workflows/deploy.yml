@@ -55,7 +55,7 @@ jobs:
           
       - name: Configure IIS site
         run: |
-            Import-Module WebAdministration
+            Import-Module WebAdministration -SkipEditionCheck
     
             $siteName = "TZApp"
             $physicalPath = "C:\web\TZApp"
