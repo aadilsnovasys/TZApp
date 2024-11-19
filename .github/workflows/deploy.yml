@@ -51,7 +51,7 @@ jobs:
 
       - name: Copy build files to IIS directory
         run: |
-          Copy-Item -Path "./dist/TZApp/browser/*" -Destination "C:\web\TZApp" -Recurse -Force
+          Copy-Item -Path "./dist/TZApp/*" -Destination "C:\web\TZApp" -Recurse -Force
         
       - name: Create IIS site
         run: |
@@ -59,7 +59,7 @@ jobs:
               try {
                   Import-Module WebAdministration
                   if (-not (Test-Path IIS:\Sites\TZApp)) {
-                      New-Website -Name 'TZApp' -Port 80 -PhysicalPath 'C:\web\TZApp\browser' -ApplicationPool 'DefaultAppPool'
+                      New-Website -Name 'TZApp' -Port 80 -PhysicalPath 'C:\web\TZApp' -ApplicationPool 'DefaultAppPool'
                       Write-Output 'IIS site created successfully.'
                   } else {
                       Write-Output 'IIS site already exists.'
