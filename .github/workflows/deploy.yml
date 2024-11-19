@@ -53,8 +53,8 @@ jobs:
         run: |
           Copy-Item -Path "./dist/TZApp/browser/*" -Destination "C:\web\TZApp" -Recurse -Force
           
-          - name: Configure IIS site
-          run: |
+      - name: Configure IIS site
+        run: |
             Import-Module WebAdministration
     
             $siteName = "TZApp"
@@ -72,7 +72,7 @@ jobs:
     
             # Ensure the site is running
             Start-Website -Name $siteName
-          shell: pwsh
+        shell: pwsh
 
 
 
