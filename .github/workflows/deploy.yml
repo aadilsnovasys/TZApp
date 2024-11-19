@@ -55,13 +55,15 @@ jobs:
     # Step 5: Run PowerShell script directly in YAML
     - name: Configure IIS site
       run: |
-        Import-Module WebAdministration
+        Import-Module WebAdministration -SkipEditionCheck
         $siteName = 'TZApp'
         $physicalPath = 'C:\web\TZApp'
         $port = 80
 
+        $siteExists = Get-Website | Where-Object { $_.Name -eq $siteName }
+
         # Check if the site exists
-        if (!(Get-Website | Where-Object { $_.Name -eq $siteName })) {
+        if ($null -eq $siteExists) {
           Write-Host "Creating new IIS site: $siteName"
           New-Website -Name $siteName -PhysicalPath $physicalPath -Port $port -ApplicationPool 'DefaultAppPool'
         } else {
