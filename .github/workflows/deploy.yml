@@ -26,46 +26,51 @@ jobs:
           path: dist/
   deploy:
     runs-on:
-      - self-hosted
-      - windows
+    - self-hosted
+    - windows
     needs: build
     steps:
-      - name: Download production build
-        uses: actions/download-artifact@v3
-        with:
-          name: dist
-          path: ./dist
-      - name: List contents of downloaded build directory (for debugging)
-        run: |
-          Get-ChildItem -Recurse ./dist
-      - name: Create directory for TZApp in IIS path
-        run: |
-          if (!(Test-Path -Path "C:\web\TZApp")) {
-            New-Item -Path "C:\web\TZApp" -ItemType Directory -Force
-          }
-      - name: Copy build files to IIS directory
-        run: >
-          Copy-Item -Path "./dist/TZApp/browser/*" -Destination "C:\web\TZApp"
-          -Recurse -Force
-          
-      - name: Checkout repository
-        uses: actions/checkout@v3
-  
-      - name: Copy PowerShell script to server
-        run: |
-          
-          $scriptPath = "$env:GITHUB_WORKSPACE\scripts\deploy-iis.ps1"
-          $destinationPath = "C:\Temp\deploy-site.ps1" # Destination path on server
+    # Step 1: Download production build
+    - name: Download production build
+      uses: actions/download-artifact@v3
+      with:
+        name: dist
+        path: ./dist
 
-          
-          Copy-Item -Path $scriptPath -Destination $destinationPath
+    # Step 2: List contents of downloaded build directory (debugging)
+    - name: List contents of downloaded build directory
+      run: |
+        Get-ChildItem -Recurse ./dist
 
-      # Run the PowerShell script as an administrator
-      - name: Run PowerShell script as administrator
-        run: |
-          
-          $scriptPath = "C:\Temp\deploy-site.ps1"
+    # Step 3: Create directory for TZApp in IIS path
+    - name: Create IIS directory for TZApp
+      run: |
+        if (!(Test-Path -Path "C:\web\TZApp")) {
+          New-Item -Path "C:\web\TZApp" -ItemType Directory -Force
+        }
 
-          
-          Start-Process -FilePath "powershell.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File $scriptPath" -Verb RunAs -Wait  
+    # Step 4: Copy build files and script to IIS directory
+    - name: Copy build files and deployment script
+      run: |
+        # Define paths
+        $buildSourcePath = "./dist/TZApp/browser/*"
+        $iisDestinationPath = "C:\web\TZApp"
+        $scriptSourcePath = "./scripts/deploy-iis.ps1"
+        $scriptDestinationPath = "C:\web\TZApp\deploy-iis.ps1"
+
+        # Copy build files
+        Copy-Item -Path $buildSourcePath -Destination $iisDestinationPath -Recurse -Force
+
+        # Copy the deployment script
+        Copy-Item -Path $scriptSourcePath -Destination $scriptDestinationPath -Force
+
+    # Step 5: Run the PowerShell script as administrator
+    - name: Run PowerShell script as administrator
+      run: |
+        # Path to the copied script
+        $scriptPath = "C:\web\TZApp\deploy-iis.ps1"
+
+        # Execute the script
+        Start-Process -FilePath "powershell.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File $scriptPath" -Verb RunAs -Wait
+
   
