@@ -51,7 +51,7 @@ jobs:
       - name: Copy PowerShell script to server
         run: |
           
-          $scriptPath = "$env:GITHUB_WORKSPACE\scripts\deploy-site.ps1" # Local PowerShell script in repo
+          $scriptPath = "$env:GITHUB_WORKSPACE\scripts\deploy-iis.ps1"
           $destinationPath = "C:\Temp\deploy-site.ps1" # Destination path on server
 
           
