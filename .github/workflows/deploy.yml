@@ -44,16 +44,22 @@ jobs:
       - name: Download Build Artifacts
         uses: actions/download-artifact@v3
         with:
-          name: angular-build
+          name: dist
 
-      - name: Deploy to IIS
+      - name: Ensure IIS Directory Exists and Deploy
         run: |
+          # Define paths
+          $iisPath = "C:\web\TZApp"
+          $buildPath = "${{ github.workspace }}\dist"
+
           # Ensure IIS directory exists
-          if (!(Test-Path -Path 'C:\web\TZApp')) { 
-            New-Item -ItemType Directory -Force -Path 'C:\web\TZApp' 
+          if (!(Test-Path -Path $iisPath)) {
+            New-Item -ItemType Directory -Force -Path $iisPath
           }
+
           # Clear old files
-          Remove-Item -Recurse -Force 'C:\web\TZApp\*'
-          # Copy new files to IIS directory
-          Copy-Item -Recurse -Force './dist/TZApp/*' 'C:\web\TZApp'
-        shell: powershell
+          Remove-Item -Recurse -Force "$iisPath\*"
+
+          # Copy new files
+          Copy-Item -Recurse -Force "$buildPath\*" $iisPath
+        shell: pwsh
