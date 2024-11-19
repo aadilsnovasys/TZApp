@@ -55,7 +55,7 @@ jobs:
 
       - name: Run PowerShell commands as administrator to create IIS site
         run: |
-          Start-Process powershell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command \"Import-Module WebAdministration; New-Website -Name 'TZApp' -Port 80 -PhysicalPath 'C:\web\TZApp' -ApplicationPool 'DefaultAppPool'\"" -Verb RunAs -Wait
+          Start-Process powershell -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', 'Import-Module WebAdministration; New-Website -Name ''TZApp'' -Port 80 -PhysicalPath ''C:\web\TZApp'' -ApplicationPool ''DefaultAppPool''' -Verb RunAs -Wait
 
       - name: Start IIS site
         run: |
