@@ -57,9 +57,10 @@ jobs:
         run: |
           Start-Process powershell -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', 'Import-Module WebAdministration; New-Website -Name ''TZApp'' -Port 80 -PhysicalPath ''C:\web\TZApp'' -ApplicationPool ''DefaultAppPool''' -Verb RunAs -Wait
 
-      - name: Start IIS site
+      - name: Start IIS site with elevated permissions
         run: |
-          powershell -Command "Import-Module WebAdministration; Start-Website -Name 'TZApp'"
+          Start-Process powershell -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', 'Import-Module WebAdministration; Start-Website -Name ''TZApp''' -Verb RunAs -Wait
+
 
 
 
