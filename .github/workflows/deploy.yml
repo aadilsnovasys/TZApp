@@ -1,6 +1,5 @@
-name: Build and Deploy TZApp
+name: Build and Deploy Angular App
 
-# Trigger on push to the main branch
 on:
   push:
     branches:
@@ -8,70 +7,54 @@ on:
 
 jobs:
   build:
-    name: Build Angular App
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 20.11.1
+          node-version: '20.11.1'
 
-      - name: Install Angular CLI
-        run: npm install -g @angular/cli@18.2.12
+      - name: Install dependencies
+        run: |
+          npm install
 
-      - name: Install Dependencies
-        run: npm install
+      - name: Build Angular app
+        run: |
+          npm run build -- --configuration production
 
-      - name: Build Angular App
-        run: npm run build -- --configuration production
-
-      - name: Create a GitHub Release and Upload Build Artifact
-        uses: softprops/action-gh-release@v1
+      - name: Archive production build
+        uses: actions/upload-artifact@v3
         with:
-          files: dist/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: dist
+          path: dist/
 
   deploy:
-    name: Deploy to IIS
-    runs-on: self-hosted
-
+    runs-on: [self-hosted, windows]
     needs: build
-
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - name: Download production build
+        uses: actions/download-artifact@v3
+        with:
+          name: dist
 
-      - name: Install GitHub CLI
+      - name: Create directory for TZApp in IIS path
         run: |
-          curl -fsSL https://cli.github.com/packages/github-cli.sh | sudo bash
-          sudo apt-get install gh
+          New-Item -Path "C:\web\TZApp" -ItemType Directory -Force
 
-      - name: Authenticate with GitHub CLI
-        run: gh auth login --with-token ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Download Build Artifact from GitHub Release
+      - name: Copy build files to IIS directory
         run: |
-          gh release download <release_name> --repo <username>/<repo> --dir ./deploy
+          Copy-Item -Path "dist\TZApp\*" -Destination "C:\web\TZApp" -Recurse -Force
 
-      - name: Ensure IIS Directory Exists and Deploy
+      - name: Create IIS site
         run: |
-          # Define paths
-          $iisPath = "C:\web\TZApp"
-          $buildPath = "${{ github.workspace }}\deploy"  # Path where the artifact is downloaded
+          Import-Module WebAdministration
+          New-Website -Name "TZApp" -Port 80 -PhysicalPath "C:\web\TZApp" -ApplicationPool "DefaultAppPool"
+      
+      - name: Start IIS site
+        run: |
+          Start-Website -Name "TZApp"
 
-          # Ensure IIS directory exists
-          if (!(Test-Path -Path $iisPath)) {
-            New-Item -ItemType Directory -Force -Path $iisPath
-          }
 
-          # Clear old files
-          Remove-Item -Recurse -Force "$iisPath\*"
-
-          # Copy new files
-          Copy-Item -Recurse -Force "$buildPath\*" $iisPath
-        shell: pwsh
