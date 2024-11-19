@@ -50,5 +50,5 @@ jobs:
       - name: Configure IIS site
         # shell: powershell
         run: |
-          Start-Process powershell -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', './scripts/deploy-iis.ps1' -Verb RunAs -Wait
+          Start-Process powershell './scripts/deploy-iis.ps1'
   
