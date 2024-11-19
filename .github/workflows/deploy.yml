@@ -59,7 +59,8 @@ jobs:
 
       - name: Start IIS site
         run: |
-          Start-Website -Name "TZApp"
+          powershell -Command "Import-Module WebAdministration; Start-Website -Name 'TZApp'"
+
 
 
 
