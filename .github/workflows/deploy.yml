@@ -55,7 +55,7 @@ jobs:
     # Step 5: Run PowerShell script directly in YAML
     - name: Configure IIS site
       run: |
-        Import-Module WebAdministration -SkipEditionCheck
+        Import-Module WebAdministration 
         $siteName = 'TZApp'
         $physicalPath = 'C:\web\TZApp'
         $port = 80
