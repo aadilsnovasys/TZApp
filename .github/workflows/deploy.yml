@@ -47,8 +47,22 @@ jobs:
         run: >
           Copy-Item -Path "./dist/TZApp/browser/*" -Destination "C:\web\TZApp"
           -Recurse -Force
-      - name: Configure IIS site
-        shell: powershell
+
+      - name: Copy PowerShell script to server
         run: |
-          Start-Process powershell -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', './scripts/deploy-iis.ps1' -Verb RunAs -Wait
+          
+          $scriptPath = "$env:GITHUB_WORKSPACE\scripts\deploy-site.ps1" # Local PowerShell script in repo
+          $destinationPath = "C:\Temp\deploy-site.ps1" # Destination path on server
+
+          
+          Copy-Item -Path $scriptPath -Destination $destinationPath
+
+      # Run the PowerShell script as an administrator
+      - name: Run PowerShell script as administrator
+        run: |
+          
+          $scriptPath = "C:\Temp\deploy-site.ps1"
+
+          
+          Start-Process -FilePath "powershell.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File $scriptPath" -Verb RunAs -Wait  
   
