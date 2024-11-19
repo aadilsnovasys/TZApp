@@ -48,7 +48,7 @@ jobs:
           Copy-Item -Path "./dist/TZApp/browser/*" -Destination "C:\web\TZApp"
           -Recurse -Force
       - name: Configure IIS site
-        shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE
+        shell: powershell
 
         run: |
           Start-Process powershell -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', "
