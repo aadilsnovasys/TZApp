@@ -53,14 +53,26 @@ jobs:
         run: |
           Copy-Item -Path "./dist/TZApp/browser/*" -Destination "C:\web\TZApp" -Recurse -Force
           
-      # - name: Run PowerShell commands as administrator to create IIS site
-      #   run: |
-      #       Start-Process powershell -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', 'Import-Module WebAdministration; New-Website -Name ''TZApp'' -Port 80 -PhysicalPath ''C:\web\TZApp'' -ApplicationPool ''DefaultAppPool''' -Verb RunAs -Wait
-      - name: Start IIS site with elevated permissions
-        run: |
-            Start-Process powershell -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', 'Import-Module WebAdministration; Start-Website -Name ''TZApp''' -Verb RunAs -Wait
-  
-
+          - name: Configure IIS site
+          run: |
+            Import-Module WebAdministration
+    
+            $siteName = "TZApp"
+            $physicalPath = "C:\web\TZApp"
+            $port = 80
+    
+            # Check if site exists
+            if (!(Get-Website | Where-Object { $_.Name -eq $siteName })) {
+              Write-Output "Creating new IIS site: $siteName"
+              New-Website -Name $siteName -PhysicalPath $physicalPath -Port $port -ApplicationPool "DefaultAppPool"
+            } else {
+              Write-Output "IIS site $siteName already exists. Updating physical path."
+              Set-ItemProperty "IIS:\Sites\$siteName" -Name physicalPath -Value $physicalPath
+            }
+    
+            # Ensure the site is running
+            Start-Website -Name $siteName
+          shell: pwsh
 
 
 
