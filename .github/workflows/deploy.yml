@@ -52,38 +52,14 @@ jobs:
       - name: Copy build files to IIS directory
         run: |
           Copy-Item -Path "./dist/TZApp/*" -Destination "C:\web\TZApp" -Recurse -Force
-        
-      - name: Create IIS site
-        run: |
-            powershell -NoProfile -ExecutionPolicy Bypass -Command "
-              try {
-                  Import-Module WebAdministration
-                  if (-not (Test-Path IIS:\Sites\TZApp)) {
-                      New-Website -Name 'TZApp' -Port 80 -PhysicalPath 'C:\web\TZApp' -ApplicationPool 'DefaultAppPool'
-                      Write-Output 'IIS site created successfully.'
-                  } else {
-                      Write-Output 'IIS site already exists.'
-                  }
-              } catch {
-                  Write-Error 'Failed to create IIS site: $_'
-                  exit 1
-              }
-            "
-        
-      - name: Start IIS site
-        run: |
-            powershell -NoProfile -ExecutionPolicy Bypass -Command "
-              try {
-                  Import-Module WebAdministration
-                  Start-Website -Name 'TZApp'
-                  Write-Output 'IIS site started successfully.'
-              } catch {
-                  Write-Error 'Failed to start IIS site: $_'
-                  exit 1
-              }
-            "
-        
           
+      # - name: Run PowerShell commands as administrator to create IIS site
+      #   run: |
+      #       Start-Process powershell -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', 'Import-Module WebAdministration; New-Website -Name ''TZApp'' -Port 80 -PhysicalPath ''C:\web\TZApp'' -ApplicationPool ''DefaultAppPool''' -Verb RunAs -Wait
+      - name: Start IIS site with elevated permissions
+        run: |
+            Start-Process powershell -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', 'Import-Module WebAdministration; Start-Website -Name ''TZApp''' -Verb RunAs -Wait
+  
 
 
 
