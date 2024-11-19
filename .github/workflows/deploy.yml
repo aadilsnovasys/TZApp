@@ -52,7 +52,7 @@ jobs:
 
         run: |
           Start-Process powershell -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', "
-          Import-Module WebAdministration -SkipEditionCheck
+          Import-Module WebAdministration
           $siteName = 'TZApp'
           $physicalPath = 'C:\web\TZApp'
           $port = 80
@@ -63,10 +63,9 @@ jobs:
           New-Website -Name $siteName -PhysicalPath $physicalPath -Port $port -ApplicationPool 'DefaultAppPool'
           } else {
           Write-Host 'IIS site $siteName already exists. Updating physical path.'
-          Set-ItemProperty 'IIS:\Sites\$siteName' -Name physicalPath -Value $physicalPath
+          Set-ItemProperty "IIS:\Sites\$siteName" -Name physicalPath -Value $physicalPath
           }
 
           # Ensure the site is running
           Start-Website -Name $siteName
           " -Verb RunAs -Wait
-# Code Complete
