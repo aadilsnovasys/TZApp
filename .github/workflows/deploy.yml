@@ -1,5 +1,6 @@
 name: Build and Deploy TZApp
-# Building Angular App
+
+# Trigger on push to the main branch
 on:
   push:
     branches:
@@ -28,11 +29,12 @@ jobs:
       - name: Build Angular App
         run: npm run build -- --configuration production
 
-      - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v3
+      - name: Create a GitHub Release and Upload Build Artifact
+        uses: softprops/action-gh-release@v1
         with:
-          name: angular-build
-          path: dist/
+          files: dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   deploy:
     name: Deploy to IIS
@@ -41,16 +43,26 @@ jobs:
     needs: build
 
     steps:
-      - name: Download Build Artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: dist
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install GitHub CLI
+        run: |
+          curl -fsSL https://cli.github.com/packages/github-cli.sh | sudo bash
+          sudo apt-get install gh
+
+      - name: Authenticate with GitHub CLI
+        run: gh auth login --with-token ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download Build Artifact from GitHub Release
+        run: |
+          gh release download <release_name> --repo <username>/<repo> --dir ./deploy
 
       - name: Ensure IIS Directory Exists and Deploy
         run: |
           # Define paths
           $iisPath = "C:\web\TZApp"
-          $buildPath = "${{ github.workspace }}\dist"
+          $buildPath = "${{ github.workspace }}\deploy"  # Path where the artifact is downloaded
 
           # Ensure IIS directory exists
           if (!(Test-Path -Path $iisPath)) {
