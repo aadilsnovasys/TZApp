@@ -51,11 +51,11 @@ jobs:
 
       - name: Copy build files to IIS directory
         run: |
-          Copy-Item -Path "./dist/TZApp/*" -Destination "C:\web\TZApp" -Recurse -Force
-
+          Copy-Item -Path "./dist/TZApp/browser/*" -Destination "C:\web\TZApp" -Recurse -Force
+        
       - name: Run PowerShell commands as administrator to create IIS site
         run: |
-          Start-Process powershell -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', 'Import-Module WebAdministration; New-Website -Name ''TZApp'' -Port 80 -PhysicalPath ''C:\web\TZApp'' -ApplicationPool ''DefaultAppPool''' -Verb RunAs -Wait
+          Start-Process powershell -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', 'Import-Module WebAdministration; New-Website -Name ''TZApp'' -Port 80 -PhysicalPath ''C:\web\TZApp\browser'' -ApplicationPool ''DefaultAppPool''' -Verb RunAs -Wait
 
       - name: Start IIS site with elevated permissions
         run: |
