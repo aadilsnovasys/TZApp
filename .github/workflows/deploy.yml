@@ -1,5 +1,5 @@
 name: Build and Deploy TZApp
-
+# Building Angular App
 on:
   push:
     branches:
